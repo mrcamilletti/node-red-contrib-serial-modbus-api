@@ -4,9 +4,12 @@ module.exports = function(RED) {
         var node = this;
 
          // Retrieve the config node
-        this.server = RED.nodes.getNode(config.server);
+         this.status({fill:"gray",shape:"ring",text:"disconnected"});
+         this.server = RED.nodes.getNode(config.server);
 
         if (this.server) {
+            this.status({fill:"green",shape:"dot",text:"connected"});
+            this.queue = 0;
             // Do something with:
             //  this.server.host
             //  this.server.port
@@ -19,14 +22,20 @@ module.exports = function(RED) {
 
                 msg.payload.id.forEach((id) => {
                     var tele = {...msg.payload, id: id};
+                    this.queue++;
+                    this.status({fill:"green",shape:"dot",text:"q:"+this.queue});
                     this.server.pushTelegram(tele, 
                         (r) => {
                             msg.payload = r;
                             node.send(msg);
+                            this.queue--;
+                            this.status({fill:"green",shape:"dot",text:"q:"+this.queue});
                         },
                         (e) => {
                             msg.payload = e;
                             node.send(msg);
+                            this.queue--;
+                            this.status({fill:"red",shape:"dot",text:"q:"+this.queue});
                         }
                 )});
             });

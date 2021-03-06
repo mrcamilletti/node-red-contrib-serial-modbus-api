@@ -8,6 +8,9 @@ module.exports = function (RED) {
 
         this.serial = config.serial || "/dev/ttyUSB0";
         this.debug = config.debug || false;
+        this.interval = config.interval || 0;
+        this.timeout = config.timeout || 100;
+        this.capacity = config.capacity || 64;
         // 'none' | 'even' | 'mark' | 'odd' | 'space';
         this.serial_options = {
             baudRate: config.baudRate || 19200,
@@ -20,12 +23,11 @@ module.exports = function (RED) {
             bufferSize: config.bufferSize || 512
         };
 
-        this.tasks = new TaskQueue(1);
+        this.tasks = new TaskQueue(this.capacity, this.interval);
         this.mbus = new ModbusRTU();
 
         sendTelegram = (service, telegram) => {
             p = new Promise(function (resolve, reject) {
-                service.setTimeout(telegram.timeout || 100);
                 service.setID(telegram.id || 1);
 
                 if ("read" in telegram) {
@@ -108,6 +110,14 @@ module.exports = function (RED) {
                         error(e);
                         done();
                     });
+            }, () => {
+                node.error("Queue capacity reached");
+                error({...tele, error:{
+                        name: "TransactionQueueError",                    
+                        message:"Queue capacity reached",
+                        errno:"EQUEUE"
+                    }
+                });
             });
         };
 
@@ -115,8 +125,9 @@ module.exports = function (RED) {
             node.serial_options.baudRate = 19200; //test
             this.mbus.connectRTUBuffered(node.serial, node.serial_options, () => {
                 node.log(
-                    `Modbus Server listening on ${node.serial}:${node.serial_options.baudRate}.`
+                    `Modbus Server listening on ${node.serial}:${node.serial_options.baudRate}.`                    
                 );
+                this.mbus.setTimeout(node.timeout || 100);
             });
         } catch (error) {
             node.error(`Error while starting the Modbus server: ${error}`);

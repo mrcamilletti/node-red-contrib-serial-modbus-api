@@ -4,8 +4,11 @@
         //validate:RED.validators.number()
         defaults: {
             name:       {value:'',              required:false},
-            baudRate:   {value:19200,           required:true},
+            baudRate:   {value:19200,           required:true, validate:RED.validators.number()},
             port:       {value:'/dev/ttyUSB0',  required:true},
+            timeout:    {value:100,             required:false, validate:RED.validators.number()},
+            interval:   {value:0,               required:false, validate:RED.validators.number()},
+            capacity:   {value:256,             required:false, validate:RED.validators.number()},
         },
         label: function() {
             //return this.name||"modbus api server";
@@ -20,12 +23,25 @@
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-config-input-port"><i class="fa fa-bookmark"></i> Port</label>
+        <label for="node-config-input-port">Port</label>
         <input type="text" id="node-config-input-port">
     </div>
     <div class="form-row">
-        <label for="node-config-input-baudRate"><i class="fa fa-bookmark"></i> Baudrate</label>
+        <label for="node-config-input-baudRate">Baudrate</label>
         <input type="number" id="node-config-input-baudRate">
+    </div>
+    <br>
+    <div class="form-row">
+        <label for="node-config-input-timeout">Timeout</label>
+        <input type="number" id="node-config-input-timeout">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-interval">Interval</label>
+        <input type="number" id="node-config-input-interval">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-capacity">Queue capacity</label>
+        <input type="number" id="node-config-input-capacity">
     </div>
 </script>
 

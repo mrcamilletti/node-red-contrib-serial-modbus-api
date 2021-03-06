@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "A NodeRED node that connects to a custom TCP server using JSON packets",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/mrcamilletti/node-red-contrib-simple-modbus-api"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

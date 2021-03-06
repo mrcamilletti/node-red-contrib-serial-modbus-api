@@ -1,14 +1,14 @@
 <script type="text/javascript">
     RED.nodes.registerType('modbus api request',{
-        category: 'function',
-        color: '#a6bbcf',
+        category: 'network',
+        color: '#C7E9C0',
         defaults: {
             name: {value: ''},
             server: {type: 'modbus api server', required: true}
         },
         inputs:1,
         outputs:1,
-        icon: "file.png",
+        icon: "fa-chain.png",
         label: function() {
             return this.name||"modbus api request";
         }
