@@ -1,0 +1,34 @@
+<script type="text/javascript">
+    RED.nodes.registerType('modbus api server',{
+        category: 'config',
+        //validate:RED.validators.number()
+        defaults: {
+            name:       {value:'',              required:false},
+            baudRate:   {value:19200,           required:true},
+            port:       {value:'/dev/ttyUSB0',  required:true},
+        },
+        label: function() {
+            //return this.name||"modbus api server";
+            return `${this.port}:${this.baudRate}`;
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="modbus api server">
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-port"><i class="fa fa-bookmark"></i> Port</label>
+        <input type="text" id="node-config-input-port">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-baudRate"><i class="fa fa-bookmark"></i> Baudrate</label>
+        <input type="number" id="node-config-input-baudRate">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="modbus api server">
+    <p>ModbusRTU API Server Node</p>
+</script>
