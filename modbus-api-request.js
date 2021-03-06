@@ -4,16 +4,52 @@ module.exports = function(RED) {
         var node = this;
 
          // Retrieve the config node
-         this.status({fill:"gray",shape:"ring",text:"disconnected"});
-         this.server = RED.nodes.getNode(config.server);
+        node.status({fill:"gray",shape:"ring",text:"disconnected"});
+        node.server = RED.nodes.getNode(config.server);
+        
+        // Topic function
+        node.topicfc = (msg) => {};
+        switch(config.setTopic || "0") {
+            case "1":
+                node.topicfc = (msg) => {msg.topic = ""+msg.payload.id};
+                break;
+            case "2":
+                node.topicfc = (msg) => {
+                    if ("write" in msg.payload) {
+                        msg.topic = "write/"+msg.payload.id;
+                    } else if ("read" in msg.payload) {
+                        msg.topic = "read/"+msg.payload.id;
+                    }
+                }
+                break;
+            case "3":
+                node.topicfc = (msg) => {
+                    if ("write" in msg.payload) {
+                        msg.topic = "write/"+msg.payload.id+"/"+msg.payload.write;
+                    } else if ("read" in msg.payload) {
+                        msg.topic = "read/"+msg.payload.id+"/"+msg.payload.read;
+                    }
+                }
+                break;
+            case "4":
+                    node.topicfc = (msg) => {
+                        if ("write" in msg.payload) {
+                            msg.topic = ""+msg.payload.id+"/"+msg.payload.write;
+                        } else if ("read" in msg.payload) {
+                            msg.topic = ""+msg.payload.id+"/"+msg.payload.read;
+                        }
+                    }
+                    break;
+        }
+        
 
-        if (this.server) {
-            this.status({fill:"green",shape:"dot",text:"connected"});
-            this.queue = 0;
+        if (node.server) {
+            node.status({fill:"green",shape:"dot",text:"connected"});
+            node.queue = 0;
             // Do something with:
             //  this.server.host
             //  this.server.port
-            node.on('input', function(msg) {
+            node.on('input', function(msg) {                
                 if ( !("id" in msg.payload) || !msg.payload.id) {
                     msg.error = {"name": "NoIdSpecified"};
                 } else if (!Array.isArray(msg.payload.id)) {
@@ -22,20 +58,22 @@ module.exports = function(RED) {
 
                 msg.payload.id.forEach((id) => {
                     var tele = {...msg.payload, id: id};
-                    this.queue++;
-                    this.status({fill:"green",shape:"dot",text:"q:"+this.queue});
-                    this.server.pushTelegram(tele, 
+                    node.queue++;
+                    node.status({fill:"green",shape:"dot",text:"q:"+node.queue});
+                    node.server.pushTelegram(tele, 
                         (r) => {
                             msg.payload = r;
+                            node.topicfc(msg);                            
                             node.send([msg,null]);
-                            this.queue--;
-                            this.status({fill:"green",shape:"dot",text:"q:"+this.queue});
+                            node.queue--;
+                            node.status({fill:"green",shape:"dot",text:"q:"+node.queue});
                         },
                         (e) => {
                             msg.payload = e;
+                            node.topicfc(msg);
                             node.send([null,msg]);
-                            this.queue--;
-                            this.status({fill:"red",shape:"dot",text:"q:"+this.queue});
+                            node.queue--;
+                            node.status({fill:"red",shape:"dot",text:"q:"+node.queue});
                         }
                 )});
             });

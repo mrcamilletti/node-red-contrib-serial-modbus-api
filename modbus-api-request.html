@@ -4,7 +4,8 @@
         color: '#C7E9C0',
         defaults: {
             name: {value: ''},
-            server: {type: 'modbus api server', required: true}
+            server: {type: 'modbus api server', required: true},
+            setTopic: {value: '0'}
         },
         inputs:1,
         inputLabels: "formatted payload",
@@ -26,6 +27,17 @@
         <label for="node-input-server"><i class="icon-file"></i> Modbus Server</label>
         <input type="text" id="node-input-server">
     </div>
+    <div class="form-row">
+        <label for="node-input-setTopic"></i> msg.topic</label>
+        <select id="node-input-setTopic">
+            <option value="0">Keep value</option>
+            <option value="1">ID</option>
+            <option value="2">Action/ID</option>
+            <option value="3">Action/ID/Function</option>
+            <option value="4">ID/Function</option>
+        </select>
+    </div>
+
 </script>
 
 <script type="text/html" data-help-name="modbus api request">
