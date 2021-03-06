@@ -27,13 +27,13 @@ module.exports = function(RED) {
                     this.server.pushTelegram(tele, 
                         (r) => {
                             msg.payload = r;
-                            node.send(msg);
+                            node.send([msg,null]);
                             this.queue--;
                             this.status({fill:"green",shape:"dot",text:"q:"+this.queue});
                         },
                         (e) => {
                             msg.payload = e;
-                            node.send(msg);
+                            node.send([null,msg]);
                             this.queue--;
                             this.status({fill:"red",shape:"dot",text:"q:"+this.queue});
                         }
