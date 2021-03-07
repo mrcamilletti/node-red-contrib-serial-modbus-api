@@ -4,17 +4,79 @@
         //validate:RED.validators.number()
         defaults: {
             name:       {value:'',              required:false},
-            baudRate:   {value:19200,           required:true, validate:RED.validators.number()},
-            port:       {value:'/dev/ttyUSB0',  required:true},
+            port:       {value:'',              required:true},            
+            baudRate:   {value:19200,           required:true, validate:RED.validators.number()},            
             timeout:    {value:100,             required:false, validate:RED.validators.number()},
-            interval:   {value:0,               required:false, validate:RED.validators.number()},
-            capacity:   {value:256,             required:false, validate:RED.validators.number()},
+            interval:   {value:5,               required:false, validate:RED.validators.number()},
+            capacity:   {value:256,             required:false, validate:RED.validators.number()}
         },
         label: function() {
             //return this.name||"modbus api server";
             return `${this.port}:${this.baudRate}`;
+        }, oneditprepare: function() {
+            var previous = null;
+            var blist = [
+                {value:"115200",label:"115200",hasValue:false},
+                {value:"57600",label:"57600",hasValue:false},
+                {value:"38400",label:"38400",hasValue:false},
+                {value:"19200",label:"19200",hasValue:false},
+                {value:"9600",label:"9600",hasValue:false},
+                {value:"4800",label:"4800",hasValue:false},
+                {value:"2400",label:"2400",hasValue:false},
+                {value:"1200",label:"1200",hasValue:false},
+                {value:"600",label:"600",hasValue:false},
+                {value:"300",label:"300",hasValue:false},
+                {label:"other",value:"other",icon:"red/images/typedInput/09.png",validate:/^[0-9]*$/}
+            ];
+            var serialbaudType = "custom";
+            for (var i in blist) {
+                if (this.baudRate == blist[i].value) {
+                    serialbaudType = this.baudRate;
+                }
+            }
+            $("#node-config-input-baudRate").typedInput({
+                default: this.baudRate,
+                types:blist
+            });
+
+            try {
+                $("#node-config-input-port").autocomplete( "destroy" );
+            } catch(err) {
+            }
+
+            $("#node-config-lookup-serial").click(function() {
+                $("#node-config-lookup-serial").addClass('disabled');
+                $.getJSON('serialports',function(data) {
+                    $("#node-config-lookup-serial").removeClass('disabled');
+                    var ports = data || [];
+                    $("#node-config-input-port").autocomplete({
+                        source:ports,
+                        minLength:0,
+                        close: function( event, ui ) {
+                            $("#node-config-input-port").autocomplete( "destroy" );
+                        }
+                    }).autocomplete("search","");
+                });
+            });
+        },
+        oneditsave: function() {
+            var mytype = $("#node-config-input-baudRate").typedInput('type');
+            if (mytype !== "other") {
+                $("#node-config-input-baudRate").typedInput('value',mytype);
+            }
+            this.baudRate = $("#node-config-input-baudRate").typedInput('value');
         }
     });
+
+    var select = document.getElementById("node-config-input-port");
+    for(var i = 0; i < options.length; i++) {
+        var opt = options[i];
+        var el = document.createElement("option");
+        el.textContent = opt;
+        el.value = opt;
+        select.appendChild(el);
+    }
+
 </script>
 
 <script type="text/html" data-template-name="modbus api server">
@@ -23,24 +85,28 @@
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-config-input-port">Port</label>
-        <input type="text" id="node-config-input-port">
-    </div>
+        <label for="node-config-input-port"><i class="fa fa-random"></i> Serial Port</label>
+        <input type="text" id="node-config-input-port" style="width:66%;">
+        <a id="node-config-lookup-serial" class="red-ui-button"><i id="node-config-lookup-serial-icon" class="fa fa-search"></i></a>
+    </div>    
     <div class="form-row">
-        <label for="node-config-input-baudRate">Baudrate</label>
+        <label for="node-config-input-baudRate"><i class="fa fa-wrench"></i> Baudrate</label>
         <input type="number" id="node-config-input-baudRate">
     </div>
     <br>
+    <div class="form-row"> 
+        <label style="width:100%;"><b>Queue manager</b></label>
+    </div>
     <div class="form-row">
-        <label for="node-config-input-timeout">Timeout</label>
+        <label for="node-config-input-interval"><i class="fa fa-history"></i> Interval</label>
+        <input type="number" id="node-config-input-interval">
+    </div>    
+    <div class="form-row">
+        <label for="node-config-input-timeout"><i class="fa fa-hourglass-end"></i> Timeout</label>
         <input type="number" id="node-config-input-timeout">
     </div>
     <div class="form-row">
-        <label for="node-config-input-interval">Interval</label>
-        <input type="number" id="node-config-input-interval">
-    </div>
-    <div class="form-row">
-        <label for="node-config-input-capacity">Queue capacity</label>
+        <label for="node-config-input-capacity"><i class="fa fa-wrench"></i> Capacity</label>
         <input type="number" id="node-config-input-capacity">
     </div>
 </script>

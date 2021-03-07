@@ -1,26 +1,27 @@
 module.exports = function (RED) {
     const ModbusRTU = require("modbus-serial");
     const TaskQueue = require("./taskQueue");
-
+    const serialport = require("serialport");
+    
     function modbusServerNode(config) {
         RED.nodes.createNode(this, config);
         var node = this;
 
-        this.serial = config.serial || "/dev/ttyUSB0";
+        this.port = config.port;
         this.debug = config.debug || false;
-        this.interval = config.interval || 0;
+        this.interval = config.interval || 5;
         this.timeout = config.timeout || 100;
         this.capacity = config.capacity || 64;
         // 'none' | 'even' | 'mark' | 'odd' | 'space';
         this.serial_options = {
-            baudRate: config.baudRate || 19200,
+            baudRate: Number(config.baudRate) || 19200,
             dataBits: config.dataBits || 8,
             stopBits: config.stopBits || 1,
-            parity: config.parity || "none", 
+            parity: config.parity || "none",
             rtscts: config.rtscts || false,
             xon: config.xon || false,
             xoff: config.xoff || false,
-            bufferSize: config.bufferSize || 512
+            bufferSize: config.bufferSize || 512,
         };
 
         this.tasks = new TaskQueue(this.capacity, this.interval);
@@ -48,7 +49,8 @@ module.exports = function (RED) {
                             service.actionFunction = service.readDiscreteInputs;
                             break;
                         case "holding":
-                            service.actionFunction = service.readHoldingRegisters;
+                            service.actionFunction =
+                                service.readHoldingRegisters;
                             break;
                         case "input":
                             service.actionFunction = service.readInputRegisters;
@@ -100,35 +102,43 @@ module.exports = function (RED) {
         };
 
         this.pushTelegram = (tele, resp, error) => {
-            this.tasks.pushTask((done) => {
-                sendTelegram(this.mbus,tele)
-                    .then((r) => {
-                        resp(r);
-                        done();
-                    })
-                    .catch((e) => {
-                        error(e);
-                        done();
+            this.tasks.pushTask(
+                (done) => {
+                    sendTelegram(this.mbus, tele)
+                        .then((r) => {
+                            resp(r);
+                            done();
+                        })
+                        .catch((e) => {
+                            error(e);
+                            done();
+                        });
+                },
+                () => {
+                    node.error("Queue capacity reached");
+                    error({
+                        ...tele,
+                        error: {
+                            name: "TransactionQueueError",
+                            message: "Queue capacity reached",
+                            errno: "EQUEUE",
+                        },
                     });
-            }, () => {
-                node.error("Queue capacity reached");
-                error({...tele, error:{
-                        name: "TransactionQueueError",                    
-                        message:"Queue capacity reached",
-                        errno:"EQUEUE"
-                    }
-                });
-            });
+                }
+            );
         };
 
         try {
-            node.serial_options.baudRate = 19200; //test
-            this.mbus.connectRTUBuffered(node.serial, node.serial_options, () => {
-                node.log(
-                    `Modbus Server listening on ${node.serial}:${node.serial_options.baudRate}.`                    
-                );
-                this.mbus.setTimeout(node.timeout || 100);
-            });
+            this.mbus.connectRTUBuffered(
+                node.port,
+                node.serial_options,
+                () => {
+                    node.log(
+                        `Modbus Server listening on ${node.port}:${node.serial_options.baudRate}.`
+                    );
+                    this.mbus.setTimeout(node.timeout || 100);
+                }
+            );
         } catch (error) {
             node.error(`Error while starting the Modbus server: ${error}`);
         }
@@ -138,4 +148,17 @@ module.exports = function (RED) {
         });
     }
     RED.nodes.registerType("modbus api server", modbusServerNode);
+
+    // List serial ports in node config:
+    RED.httpAdmin.get("/serialports", RED.auth.needsPermission('serial.read'), function(req,res) {        
+        serialport.list().then(
+            ports => {
+                const a = ports.map(p => p.path);
+                res.json(a);
+            },
+            err => {
+                res.json([RED._("serial.errors.list")]);
+            }
+        )
+    });
 };
