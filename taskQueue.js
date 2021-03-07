@@ -25,7 +25,7 @@ TaskQueue.prototype.next = function() {
 
     if(self.queue.length) {
         var task = self.queue.shift();
-        task(function(err) {            
+        task(function() {            
             setTimeout( () => self.next(), self.interval);
         });
     }
