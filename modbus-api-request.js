@@ -58,8 +58,8 @@ module.exports = function (RED) {
                 node.on("input", function (msg) {
                     if (!("id" in msg.payload) || !msg.payload.id) {
                         msg.error = { name: "NoIdSpecified" };
-                    } else if (!Array.isArray(msg.payload.id)) {
-                        msg.payload.id = [msg.payload.id];
+                    } else if (!Array.isArray(Number(msg.payload.id))) {
+                        msg.payload.id = [Number(msg.payload.id)];
                     }
 
                     msg.payload.id.forEach((id) => {
