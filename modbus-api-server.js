@@ -7,7 +7,7 @@ module.exports = function (RED) {
     function modbusServerNode(config) {
         RED.nodes.createNode(this, config);
         var node = this;
-
+        node.setMaxListeners(50);
         node.port = config.port;
         node.debug = config.debug || false;
         node.interval = config.interval || 5;
@@ -141,7 +141,7 @@ module.exports = function (RED) {
                         //node.log(util.inspect(node.mbus, {showHidden: false, depth: null}));
 
                         node.mbus.setTimeout(node.timeout || 100);
-
+                        
                         if (node.connected || node.mbus.isOpen) {
                             node.connected = true;
                             node.emit('port-ready');
