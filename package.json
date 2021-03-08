@@ -1,11 +1,11 @@
 {
-  "name": "node-red-contrib-simple-modbus-api",
+  "name": "node-red-contrib-serial-modbus-api",
   "version": "1.1.0",
-  "description": "serial-modbus server and API implemented for NodeRED",
+  "description": "serial-modbus Server and API implemented for NodeRED",
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/mrcamilletti/node-red-contrib-simple-modbus-api"
+    "url": "git+ssh://git@github.com/mrcamilletti/node-red-contrib-serial-modbus-api"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
