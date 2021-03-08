@@ -55,23 +55,27 @@ module.exports = function (RED) {
                     node.status({ fill: "green", shape: "dot", text: "connected" });
                 });
                 node.server.on('port-close', function() {
-                    node.status({ fill: "gray", shape: "dot", text: "disconnected" });
+                    node.status({ fill: "gray", shape: "ring", text: "disconnected" });
                 });
                 node.server.on('port-error', function() {
-                    node.status({ fill: "red", shape: "dot", text: "error" });
+                    node.status({ fill: "red", shape: "ring", text: "error" });
                 });
                 
                 node.queue = 0;
 
                 node.on("input", function (msg) {
-                    if (!("id" in msg.payload) || !msg.payload.id) {
-                        msg.error = { name: "NoIdSpecified" };
-                    } else if (!Array.isArray(Number(msg.payload.id))) {
-                        msg.payload.id = [Number(msg.payload.id)];
+                    if (!node.server.connected) {
+                        msg.payload.error = {"name":"PortNotOpenError","message":"Port Not Open","errno":"ECONNREFUSED"};
+                        node.send([null, msg]);
+                        return;
                     }
 
-                    msg.payload.id.forEach((id) => {
-                        var tele = { ...msg.payload, id: id };
+                    if (!Array.isArray(msg.payload.id)) {
+                        msg.payload.id = [msg.payload.id];
+                    }
+
+                    msg.payload.id.forEach((idx) => {
+                        var tele = { ...msg.payload, id: idx };
                         node.queue++;
                         node.status({
                             fill: "green",

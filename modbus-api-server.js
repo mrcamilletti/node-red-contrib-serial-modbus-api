@@ -31,18 +31,42 @@ module.exports = function (RED) {
 
         sendTelegram = (service, telegram) => {
             p = new Promise(function (resolve, reject) {
-                service.setID(telegram.id || 1);
-
+                if (!("id" in telegram) || telegram.id===undefined) {
+                    telegram.error = {"name":"NoIdSpecified","message":"Device ID missing","errno":"ENOIDSPEC"};
+                    reject(telegram);
+                    return;
+                } 
+                
+                try {
+                    service.setID(Number(telegram.id));
+                } catch(error) {
+                    telegram.error = {
+                        name: "ErrorInvalidID",
+                        message: "Invalid ID",
+                        errno: "EINVALIDID",
+                        details: error
+                    }
+                    reject(telegram);
+                }
+                
                 if ("read" in telegram) {
-                    // Check all the vars...
+                    // --- READ --------------------------------------------------
                     if ("from" in telegram && "to" in telegram) {
                         // TODO: Check if diference is greater or equal to zero
                         telegram.addr = telegram.from;
                         telegram.quantity = telegram.to - telegram.from + 1;
+                    } else if (!"addr" in telegram) {
+                        telegram.error = {
+                            name: "AddrValueMissing",
+                            message: "Property <addr> is required",
+                            errno: "EADDRPARAM",
+                        }
+                        reject(telegram);
                     }
 
-                    // Decode function and params
                     service.actionParam = telegram.quantity || 1;
+
+                    // Decode function and params
                     switch (telegram.read) {
                         case "coil":
                             service.actionFunction = service.readCoils;
@@ -57,8 +81,24 @@ module.exports = function (RED) {
                         case "input":
                             service.actionFunction = service.readInputRegisters;
                             break;
+                        default:
+                            telegram.error = {
+                                name: "ReadFuncUnk",
+                                message: "Property <read> values must be: coil | discrete | holding | input",
+                                errno: "EREADPARAM",
+                            }
+                            reject(telegram);
                     }
                 } else if ("write" in telegram) {
+                    // --- WRITE -------------------------------------------------
+                    if (!"value" in telegram) {
+                        telegram.error = {
+                            name: "WriteValueMissing",
+                            message: "property <value> is required",
+                            errno: "EWRITEPARAM",
+                        }
+                        reject(telegram);
+                    }
                     service.actionParam = telegram.value;
                     switch (telegram.write) {
                         case "coil":
@@ -75,6 +115,13 @@ module.exports = function (RED) {
                                 ? service.writeRegisters
                                 : service.writeRegister;
                             break;
+                        default:
+                            telegram.error = {
+                                name: "WriteFuncUnk",
+                                message: "Property <write> values must be: coil | holding",
+                                errno: "EWRITEPARAM",
+                            }
+                            reject(telegram);
                     }
                 }
 
@@ -87,14 +134,6 @@ module.exports = function (RED) {
                         resolve(telegram);
                     })
                     .catch(function (e) {
-                        // if ((e.name == 'TransactionTimedOutError') && (telegram.retries || 0 > 0)) {
-                        //   telegram.retries--;
-                        //   setImmediate( () => {
-                        //     sendTelegram(telegram)
-                        //   });
-                        // } else {
-                        //   telegram.error = {...e};
-                        // }
                         telegram.error = { ...e };
                         reject(telegram);
                     });
