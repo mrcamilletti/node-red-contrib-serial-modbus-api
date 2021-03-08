@@ -8,7 +8,7 @@
     "url": "git+ssh://git@github.com/mrcamilletti/node-red-contrib-serial-modbus-api.git"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"No test specified\""
   },
   "keywords": [
     "modbus",
