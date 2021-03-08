@@ -1,7 +1,18 @@
 # node-red-contrib-simple-modbus-api
 Modbus Serial based API nodes made simple for NodeRED
 
-## Access to single and multiple devices
+## Request node
+<b>Modbus Server</b>: Select configuration node (required) <br>
+<b>msg.topic</b>: Select option to change message topic. Default: Keep </br>
+
+## Configuration node
+<b>Port</b>: Serial device location. i.e.: /dev/ttyUSB0 <br>
+<b>Baudrate</b>: Serial baudrate.<br>
+<b>Timeout</b>: Response timeout from device request. Value in milliseconds.<br>
+<b>Interval</b>: Sleep time between transactions. Value in milliseconds.<br>
+<b>Queue capacity</b>: Máximum number of transactions in the queue.<br>
+
+## Access to single and multiple devices through <modbus request> node
 
 ### Payload format for reading:
 ```
@@ -123,14 +134,4 @@ msg.payload = {
 }
 ```
 
-## Configuration node
-<b>Port</b>: Serial device location. i.e.: /dev/ttyUSB0 <br>
-<b>Baudrate</b>: Serial baudrate.<br>
-<b>Timeout</b>: Response timeout from device request. Value in milliseconds.<br>
-<b>Interval</b>: Sleep time between transactions. Value in milliseconds.<br>
-<b>Queue capacity</b>: Máximum number of transactions in the queue.<br>
 
-
-## Request node
-<b>Modbus Server</b>: Select configuration node (required) <br>
-<b>msg.topic</b>: Select option to change message topic. Default: Keep </br>
