@@ -4,8 +4,8 @@ module.exports = function (RED) {
         var node = this;
 
         // Retrieve the config node
-        node.status({ fill: "gray", shape: "ring", text: "disconnected" });
-        node.server = RED.nodes.getNode(config.server);
+        node.server = RED.nodes.getNode(config.server);        
+        node.status({ fill: "gray", shape: "ring", text: "no server" });
 
         // Topic function
         node.topicfc = (msg) => {};
@@ -50,7 +50,17 @@ module.exports = function (RED) {
 
         try {
             if (node.server) {
-                node.status({ fill: "green", shape: "dot", text: "connected" });
+
+                node.server.on('port-ready', function() {
+                    node.status({ fill: "green", shape: "dot", text: "connected" });
+                });
+                node.server.on('port-close', function() {
+                    node.status({ fill: "gray", shape: "dot", text: "disconnected" });
+                });
+                node.server.on('port-error', function() {
+                    node.status({ fill: "red", shape: "dot", text: "error" });
+                });
+                
                 node.queue = 0;
                 // Do something with:
                 //  this.server.host
