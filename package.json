@@ -17,7 +17,7 @@
     "api"
   ],
   "author": "mrcamilletti",
-  "license": "Apache-2.0",
+  "license": "ISC",
   "node-red": {
     "nodes": {
       "modbus server": "modbus-api-server.js",
