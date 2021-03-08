@@ -1,11 +1,11 @@
 {
-  "name": "node-red-contrib-serial-modbus-api",
+  "name": "@mrcamilletti/node-red-contrib-serial-modbus-api",
   "version": "1.0.0",
   "description": "serial-modbus Server and API implemented for NodeRED",
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/mrcamilletti/node-red-contrib-serial-modbus-api"
+    "url": "git+ssh://git@github.com/mrcamilletti/node-red-contrib-serial-modbus-api.git"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -17,7 +17,7 @@
     "api"
   ],
   "author": "mrcamilletti",
-  "license": "Apache License 2.0",
+  "license": "Apache-2.0",
   "node-red": {
     "nodes": {
       "modbus server": "modbus-api-server.js",
@@ -29,5 +29,9 @@
   },
   "dependencies": {
     "modbus-serial": "^7.7.3"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/mrcamilletti/node-red-contrib-serial-modbus-api/issues"
+  },
+  "homepage": "https://github.com/mrcamilletti/node-red-contrib-serial-modbus-api#readme"
 }
