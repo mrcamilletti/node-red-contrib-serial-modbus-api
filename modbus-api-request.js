@@ -62,9 +62,7 @@ module.exports = function (RED) {
                 });
                 
                 node.queue = 0;
-                // Do something with:
-                //  this.server.host
-                //  this.server.port
+
                 node.on("input", function (msg) {
                     if (!("id" in msg.payload) || !msg.payload.id) {
                         msg.error = { name: "NoIdSpecified" };

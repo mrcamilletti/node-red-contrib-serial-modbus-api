@@ -149,21 +149,21 @@ module.exports = function (RED) {
                             node.connected = false;
                             //node.mbus.close();
                             node.emit('port-close');
-                            setTimeout(node.connect, 1000);
+                            setTimeout(node.connect, 3000);
                         }
 
                         node.mbus._port._client.on('close', function() {
                             //node.error(`Serial port ${node.port} closed.`);
                             node.connected = false;
                             node.emit('port-close');
-                            setTimeout(node.connect, 1000);
+                            setTimeout(node.connect, 3000);
                         });
 
                         node.mbus._port._client.on('error', function(error) {
                             node.connected = false;
                             node.error(`Serial port ${node.port} error: ${error}`);
                             node.emit('port-error');
-                            setTimeout(node.connect, 1000);
+                            setTimeout(node.connect, 3000);
                         });            
                     }
                 );                
