@@ -17,7 +17,7 @@
     "api"
   ],
   "author": "mrcamilletti",
-  "license": "ISC",
+  "license": "Unlicense",
   "node-red": {
     "nodes": {
       "modbus server": "modbus-api-server.js",
@@ -25,6 +25,7 @@
     }
   },
   "devDependencies": {
+    "bcrypt": ">=5.0.0",
     "node-red": "^1.0.3"
   },
   "dependencies": {
