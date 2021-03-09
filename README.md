@@ -1,11 +1,17 @@
-# node-red-contrib-simple-modbus-api
-Modbus Serial based API nodes made simple for NodeRED
+# Serial Modbus API Server for NodeRED
 
-## Request node
+## Installation:
+Requires NodeRED installed, check [here](https://nodered.org/docs/getting-started/).
+```
+$ cd ~/.node-red
+$ npm i @mrcamilletti/node-red-contrib-serial-modbus-api
+```
+
+## Modbus request node
 <b>Modbus Server</b>: Select configuration node (required) <br>
 <b>msg.topic</b>: Select option to change message topic. Default: Keep </br>
 
-## Configuration node
+## Modbus Server configuration node
 <b>Port</b>: Serial device location. i.e.: /dev/ttyUSB0 <br>
 <b>Baudrate</b>: Serial baudrate.<br>
 <b>Timeout</b>: Response timeout from device request. Value in milliseconds.<br>
