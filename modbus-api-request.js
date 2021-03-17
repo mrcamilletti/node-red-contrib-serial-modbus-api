@@ -50,7 +50,6 @@ module.exports = function (RED) {
 
         try {
             if (node.server) {
-
                 node.server.on('port-ready', function() {
                     node.status({ fill: "green", shape: "dot", text: "connected" });
                 });
