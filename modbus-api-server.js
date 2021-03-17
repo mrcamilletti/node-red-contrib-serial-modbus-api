@@ -1,8 +1,7 @@
 module.exports = function (RED) {
     const ModbusRTU = require("modbus-serial");
-    const TaskQueue = require("./taskQueue");
+    const TimerQueue = require("./timerQueue");
     const serialport = require("serialport");
-    const util = require('util')
 
     function modbusServerNode(config) {
         RED.nodes.createNode(this, config);
@@ -26,7 +25,7 @@ module.exports = function (RED) {
         };
 
         node.connected = false;
-        node.tasks = new TaskQueue(node.capacity, node.interval);
+        node.tasks = new TimerQueue(node.capacity);
         node.mbus = new ModbusRTU();
 
         sendTelegram = (service, telegram) => {
@@ -143,8 +142,7 @@ module.exports = function (RED) {
         };
 
         node.pushTelegram = (tele, resp, error) => {
-            node.tasks.pushTask(
-                (done) => {
+            var result = node.tasks.addTask( (done) => {                
                     sendTelegram(node.mbus, tele)
                         .then((r) => {
                             resp(r);
@@ -154,70 +152,96 @@ module.exports = function (RED) {
                             error(e);
                             done();
                         });
-                },
-                () => {
-                    node.error("Queue capacity reached");
-                    error({
-                        ...tele,
-                        error: {
-                            name: "TransactionQueueError",
-                            message: "Queue capacity reached",
-                            errno: "EQUEUE",
-                        },
-                    });
-                }
-            );
+                }, node.interval);
+            if (result == false) {
+                node.error("Queue capacity reached");
+                error({
+                    ...tele,
+                    error: {
+                        name: "TransactionQueueError",
+                        message: "Queue capacity reached",
+                        errno: "EQUEUE",
+                    },
+                });
+            }
         };
 
+
+
+        node._portConnectionReady = () => {
+            if (node.reconnectTimer) {
+                clearTimeout(node.reconnectTimer);
+                node.reconnectTimer = null;
+            }
+
+            if (node.mbus.isOpen) {
+                node.connected = true;
+                node.mbus.setTimeout(node.timeout || 100);
+                node.mbus._port._client.on('close', node._portClose);
+                node.mbus._port._client.on('error', node._portError);
+                node.log(`Modbus Server connected! (${node.port}:${node.serial_options.baudRate})`);
+                node.emit('port-ready');
+                return true;            
+            } else {
+                node._portConnectionRetry();
+                return false;
+            }
+        }
+
+
+        node._portConnectionRetry = () => {
+            if (!node.connected || !node.mbus.isOpen) {
+                node.warn(`Retrying connection (${node.port}:${node.serial_options.baudRate})...`);
+                if (!node.reconnectTimer) node.reconnectTimer = setTimeout(node.connect, 3000);
+            }
+        }
+
+        node._portClose = () => {
+            node.connected = false;
+            node.warn(`Serial port ${node.port} connection closed.`);
+            node.emit('port-close');
+            node._portConnectionRetry();
+        };
+
+        node._portError = (error) => {
+            node.connected = false;
+            node.error(`Serial port ${node.port} error: ${error}`);
+            node.emit('port-error');
+            node._portConnectionRetry();
+        };
+
+        node.connect = () => {
+            node.mbus.connectRTUBuffered(
+                node.port,
+                node.serial_options,
+                node._portConnectionReady
+            );
+        }
+
         try {
-            node.connect = () => {
-                node.mbus.connectRTUBuffered(
-                    node.port,
-                    node.serial_options,
-                    () => {
-                        node.log(`Modbus Server listening on ${node.port}:${node.serial_options.baudRate}.`);                    
-                        
-                        //node.log(util.inspect(node.mbus, {showHidden: false, depth: null}));
-
-                        node.mbus.setTimeout(node.timeout || 100);
-                        
-                        if (node.connected || node.mbus.isOpen) {
-                            node.connected = true;
-                            node.emit('port-ready');
-                        } else {
-                            node.connected = false;
-                            //node.mbus.close();
-                            node.emit('port-close');
-                            setTimeout(node.connect, 3000);
-                        }
-
-                        node.mbus._port._client.on('close', function() {
-                            //node.error(`Serial port ${node.port} closed.`);
-                            node.connected = false;
-                            node.emit('port-close');
-                            setTimeout(node.connect, 3000);
-                        });
-
-                        node.mbus._port._client.on('error', function(error) {
-                            node.connected = false;
-                            node.error(`Serial port ${node.port} error: ${error}`);
-                            node.emit('port-error');
-                            setTimeout(node.connect, 3000);
-                        });            
-                    }
-                );                
-            }            
-            
             node.connect();
-
         } catch (error) {
             node.error(`Error while starting the Modbus server: ${error}`);
         }
 
-        node.on("close", (done) => {
+        node.on("close", (done) => {            
+            if (node.reconnectTimer) {
+                clearTimeout(node.reconnectTimer);
+                node.reconnectTimer = null;
+            }            
+
+            node.connected = false;                        
+            node.mbus._port._client.removeListener('close', node._portClose);
+            node.mbus._port._client.removeListener('error', node._portError);
+            
+            node.tasks.clear();
+
+            node.log("Modbus server closed.")
+
             node.mbus.close(() => done());
-            node.connected = false;
         });
+
+        
     }
     RED.nodes.registerType("modbus api server", modbusServerNode);
 
