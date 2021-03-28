@@ -1,4 +1,5 @@
 # Serial Modbus API Server for NodeRED
+[![npm version](https://badge.fury.io/js/%40mrcamilletti%2Fnode-red-contrib-serial-modbus-api.svg)](https://badge.fury.io/js/%40mrcamilletti%2Fnode-red-contrib-serial-modbus-api)
 
 ## Installation:
 Requires NodeRED installed, check [here](https://nodered.org/docs/getting-started/).
