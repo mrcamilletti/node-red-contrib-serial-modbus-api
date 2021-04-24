@@ -1,6 +1,6 @@
 {
   "name": "@mrcamilletti/node-red-contrib-serial-modbus-api",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "serial-modbus Server and API implemented for NodeRED",
   "main": "index.js",
   "repository": {
