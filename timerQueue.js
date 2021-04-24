@@ -6,8 +6,6 @@ Original code
 Code modified to set a maximum number of tasks and compatible with promises.
 */
 
-const nodeRed = require("node-red");
-
 module.exports = TimerQueue;
 
 function TimerQueue(capacity = 128){
