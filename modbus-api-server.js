@@ -41,6 +41,8 @@ module.exports = function (RED) {
         node.connected = false;
         node.tasks = new TimerQueue(node.capacity);
         //node.tasks.debug_mode = true;   // Debug Tasks
+        node.getQueueLength = () => {return node.tasks.length};
+
         node.mbus = new ModbusRTU();
 
         sendTelegram = (service, telegram) => {
