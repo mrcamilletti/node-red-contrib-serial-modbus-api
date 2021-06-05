@@ -2,6 +2,20 @@ module.exports = function (RED) {
     const ModbusRTU = require("modbus-serial");
     const TimerQueue = require("./timerQueue");
     const serialport = require("serialport");
+    const modbusErrorCode = [
+        { name: "OK", message: "No Error", errno: "OK" },
+        { name: "IllegalFunction", message: "Modbus Error: Illegal Function", errno: "EMBUSILLEGALFUN" },
+        { name: "IllegalDataAddr", message: "Modbus Error: Illegal Data Address", errno: "EMBUSILLEGALADD" },
+        { name: "IllegalDataValue", message: "Modbus Error: Illegal Data Value", errno: "EMBUSILLEGALVAL" },
+        { name: "SlaveDeviceFail", message: "Modbus Error: Slave Device Failure", errno: "EMBUSFAILSLADEV" },
+        { name: "NoIdSpecified", message:"Device ID missing", errno:"ENOIDSPEC" },
+        { name: "ErrorInvalidID", message: "Invalid ID",errno: "EINVALIDID" },
+        { name: "AddrValueMissing", message: "Property <addr> is required", errno: "EADDRPARAM"},
+        { name: "ReadFuncUnk", message: "Value of <read> property must be: coil, discrete, holding or input", errno: "EREADPARAM"},
+        { name: "WriteValueMissing", message: "Property <value> is required", errno: "EWRITEPARAM"},
+        { name: "WriteFuncUnk", message: "Property <write> values must be: coil | holding", errno: "EWRITEPARAM"},
+        { name: "TransactionQueueError", message: "Queue capacity reached", errno: "EQUEUE"}
+    ];
 
     function modbusServerNode(config) {
         RED.nodes.createNode(this, config);
@@ -25,14 +39,14 @@ module.exports = function (RED) {
         };
 
         node.connected = false;
-        node.tasks = new TimerQueue(node.capacity);        
+        node.tasks = new TimerQueue(node.capacity);
         //node.tasks.debug_mode = true;   // Debug Tasks
         node.mbus = new ModbusRTU();
 
         sendTelegram = (service, telegram) => {
             p = new Promise(function (resolve, reject) {
                 if (!("id" in telegram) || telegram.id===undefined) {
-                    telegram.error = {"name":"NoIdSpecified","message":"Device ID missing","errno":"ENOIDSPEC"};
+                    telegram.error = modbusErrorCode[5];
                     reject(telegram);
                     return;
                 } 
@@ -40,12 +54,8 @@ module.exports = function (RED) {
                 try {
                     service.setID(Number(telegram.id));
                 } catch(error) {
-                    telegram.error = {
-                        name: "ErrorInvalidID",
-                        message: "Invalid ID",
-                        errno: "EINVALIDID",
-                        details: error
-                    }
+                    telegram.error = modbusErrorCode[6];
+                    telegram.error.details = error;
                     reject(telegram);
                 }
                 
@@ -56,11 +66,7 @@ module.exports = function (RED) {
                         telegram.addr = telegram.from;
                         telegram.quantity = telegram.to - telegram.from + 1;
                     } else if (!"addr" in telegram) {
-                        telegram.error = {
-                            name: "AddrValueMissing",
-                            message: "Property <addr> is required",
-                            errno: "EADDRPARAM",
-                        }
+                        telegram.error = modbusErrorCode[7];
                         reject(telegram);
                     }
 
@@ -75,28 +81,19 @@ module.exports = function (RED) {
                             service.actionFunction = service.readDiscreteInputs;
                             break;
                         case "holding":
-                            service.actionFunction =
-                                service.readHoldingRegisters;
+                            service.actionFunction = service.readHoldingRegisters;
                             break;
                         case "input":
                             service.actionFunction = service.readInputRegisters;
                             break;
                         default:
-                            telegram.error = {
-                                name: "ReadFuncUnk",
-                                message: "Property <read> values must be: coil | discrete | holding | input",
-                                errno: "EREADPARAM",
-                            }
+                            telegram.error = modbusErrorCode[8];
                             reject(telegram);
                     }
                 } else if ("write" in telegram) {
                     // --- WRITE -------------------------------------------------
                     if (!"value" in telegram) {
-                        telegram.error = {
-                            name: "WriteValueMissing",
-                            message: "property <value> is required",
-                            errno: "EWRITEPARAM",
-                        }
+                        telegram.error = modbusErrorCode[9];
                         reject(telegram);
                     }
                     service.actionParam = telegram.value;
@@ -116,11 +113,7 @@ module.exports = function (RED) {
                                 : service.writeRegister;
                             break;
                         default:
-                            telegram.error = {
-                                name: "WriteFuncUnk",
-                                message: "Property <write> values must be: coil | holding",
-                                errno: "EWRITEPARAM",
-                            }
+                            telegram.error = modbusErrorCode[10];
                             reject(telegram);
                     }
                 }
@@ -134,7 +127,11 @@ module.exports = function (RED) {
                         resolve(telegram);
                     })
                     .catch(function (e) {
-                        telegram.error = { ...e };
+                        if ("modbusCode" in e) {
+                            telegram.error = modbusErrorCode[e.modbusCode];
+                        } else {
+                            telegram.error = { ...e };
+                        } 
                         reject(telegram);
                     });
             });
@@ -158,11 +155,7 @@ module.exports = function (RED) {
                 node.error("Queue capacity reached");
                 error({
                     ...tele,
-                    error: {
-                        name: "TransactionQueueError",
-                        message: "Queue capacity reached",
-                        errno: "EQUEUE",
-                    },
+                    error: modbusErrorCode[11]
                 });
             }
         };
