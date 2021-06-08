@@ -7,7 +7,8 @@
         defaults: {
             name: {value: ''},
             server: {type: 'modbus api server', required: true},
-            setTopic: {value: '0'}
+            setTopic: {value: '0'},
+            retries: {value: 0, validate: RED.validators.number()}
         },
         inputs:1,
         inputLabels: "formatted payload",
@@ -40,6 +41,10 @@
             <option value="3">Action/ID/Function</option>
             <option value="4">ID/Function</option>
         </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-retries"><i class="icon-file"></i> Number of retries</label>
+        <input type="text" id="node-input-retries">
     </div>
 </script>
 

@@ -6,16 +6,18 @@ module.exports = function (RED) {
         // Retrieve the config node
         node.server = RED.nodes.getNode(config.server);
 
-        // Topic function
-        node.topicfc = (msg) => {};
+        // Retry?
+        node.retries = config.retries || 1;
+
+        // Topic function        
         switch (config.setTopic || "0") {
             case "1":
-                node.topicfc = (msg) => {
+                node.setTopic = (msg) => {
                     msg.topic = `${msg.payload.id}`;
                 };
                 break;
             case "2":
-                node.topicfc = (msg) => {
+                node.setTopic = (msg) => {
                     if ("write" in msg.payload) {
                         msg.topic = `write/${msg.payload.id}`;
                     } else if ("read" in msg.payload) {
@@ -24,7 +26,7 @@ module.exports = function (RED) {
                 };
                 break;
             case "3":
-                node.topicfc = (msg) => {
+                node.setTopic = (msg) => {
                     if ("write" in msg.payload) {
                         msg.topic = `write/${msg.payload.id}/${msg.payload.write}`;
                     } else if ("read" in msg.payload) {
@@ -33,7 +35,7 @@ module.exports = function (RED) {
                 };
                 break;
             case "4":
-                node.topicfc = (msg) => {
+                node.setTopic = (msg) => {
                     if ("write" in msg.payload) {
                         msg.topic = `${msg.payload.id}/${msg.payload.write}`;
                     } else if ("read" in msg.payload) {
@@ -41,6 +43,43 @@ module.exports = function (RED) {
                     }
                 };
                 break;
+            default:
+                node.setTopic = (msg) => {};
+        }
+
+        node.setStatus = (message, color) => {
+            this.status({
+                fill: color,
+                shape: "dot",
+                text: `q:${this.queue}`,
+                message: message
+            });
+        }
+
+        node.buildMessage = (msg, value) => {
+            var resultError = "error" in value;
+
+            if ("retries" in value) {
+                value.retries--;
+                if (resultError && value.retries > 0) {
+                    delete value.error;
+                    node.setStatus("Retry","yellow");
+                    node.server.pushTelegram(
+                        value,
+                        (r) => {node.buildMessage(msg, r)},
+                        (e) => {node.buildMessage(msg, e)}
+                    );
+                    return;
+                }
+            }
+
+            msg.payload = value;
+            node.setTopic(msg);
+
+            node.send(resultError ? [null, msg] : [msg, null]);
+            
+            node.queue--;
+            resultError ? node.setStatus("Error","red") : node.setStatus("Ok","green");
         }
 
         try {
@@ -69,37 +108,14 @@ module.exports = function (RED) {
                     }
 
                     msg.payload.id.forEach((idx) => {
+                        if (node.retries > 0) msg.payload.retries = node.retries;
                         var tele = { ...msg.payload, id: idx };
                         node.queue++;
-                        node.status({
-                            fill: "green",
-                            shape: "dot",
-                            text: "q:" + node.queue,
-                        });
+                        node.setStatus("Sent","green");                        
                         node.server.pushTelegram(
                             tele,
-                            (r) => {
-                                msg.payload = r;
-                                node.topicfc(msg);
-                                node.send([msg, null]);
-                                node.queue--;
-                                node.status({
-                                    fill: "green",
-                                    shape: "dot",
-                                    text: "q:" + node.queue,
-                                });
-                            },
-                            (e) => {
-                                msg.payload = e;
-                                node.topicfc(msg);
-                                node.send([null, msg]);
-                                node.queue--;
-                                node.status({
-                                    fill: "red",
-                                    shape: "dot",
-                                    text: "q:" + node.queue,
-                                });
-                            }
+                            (r) => {node.buildMessage(msg, r)},
+                            (e) => {node.buildMessage(msg, e)}
                         );
                     });
                 });
