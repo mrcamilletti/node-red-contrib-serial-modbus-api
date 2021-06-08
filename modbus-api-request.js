@@ -4,45 +4,40 @@ module.exports = function (RED) {
         var node = this;
 
         // Retrieve the config node
-        node.server = RED.nodes.getNode(config.server);        
-        node.status({ fill: "gray", shape: "ring", text: "no server" });
+        node.server = RED.nodes.getNode(config.server);
 
         // Topic function
         node.topicfc = (msg) => {};
         switch (config.setTopic || "0") {
             case "1":
                 node.topicfc = (msg) => {
-                    msg.topic = "" + msg.payload.id;
+                    msg.topic = `${msg.payload.id}`;
                 };
                 break;
             case "2":
                 node.topicfc = (msg) => {
                     if ("write" in msg.payload) {
-                        msg.topic = "write/" + msg.payload.id;
+                        msg.topic = `write/${msg.payload.id}`;
                     } else if ("read" in msg.payload) {
-                        msg.topic = "read/" + msg.payload.id;
+                        msg.topic = `read/${msg.payload.id}`;
                     }
                 };
                 break;
             case "3":
                 node.topicfc = (msg) => {
                     if ("write" in msg.payload) {
-                        msg.topic =
-                            "write/" + msg.payload.id + "/" + msg.payload.write;
+                        msg.topic = `write/${msg.payload.id}/${msg.payload.write}`;
                     } else if ("read" in msg.payload) {
-                        msg.topic =
-                            "read/" + msg.payload.id + "/" + msg.payload.read;
+                        msg.topic = `read/${msg.payload.id}/${msg.payload.read}`;
                     }
                 };
                 break;
             case "4":
                 node.topicfc = (msg) => {
                     if ("write" in msg.payload) {
-                        msg.topic =
-                            "" + msg.payload.id + "/" + msg.payload.write;
+                        msg.topic = `${msg.payload.id}/${msg.payload.write}`;
                     } else if ("read" in msg.payload) {
-                        msg.topic =
-                            "" + msg.payload.id + "/" + msg.payload.read;
+                        msg.topic = `${msg.payload.id}/${msg.payload.read}`;
                     }
                 };
                 break;
@@ -110,6 +105,7 @@ module.exports = function (RED) {
                 });
             } else {
                 node.error("No config node selected");
+                node.status({ fill: "gray", shape: "ring", text: "no server" });
             }
         } catch (e) {
             node.error(`Error: ${error}`);
