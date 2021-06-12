@@ -29,8 +29,8 @@ module.exports = function (RED) {
         // 'none' | 'even' | 'mark' | 'odd' | 'space';
         node.serial_options = {
             baudRate: Number(config.baudRate) || 19200,
-            dataBits: config.dataBits || 8,
-            stopBits: config.stopBits || 1,
+            dataBits: Number(config.dataBits) || 8,
+            stopBits: Number(config.stopBits) || 1,
             parity: config.parity || "none",
             rtscts: config.rtscts || false,
             xon: config.xon || false,
@@ -41,7 +41,7 @@ module.exports = function (RED) {
         node.connected = false;
         node.tasks = new TimerQueue(node.capacity);
         //node.tasks.debug_mode = true;   // Debug Tasks
-        node.getQueueLength = () => {return node.tasks.length};
+        node.getQueueLength = () => {return node.tasks.length()};
 
         node.mbus = new ModbusRTU();
 
@@ -67,6 +67,7 @@ module.exports = function (RED) {
                         // TODO: Check if diference is greater or equal to zero
                         telegram.addr = telegram.from;
                         telegram.quantity = telegram.to - telegram.from + 1;
+
                     } else if (!"addr" in telegram) {
                         telegram.error = modbusErrorCode[7];
                         reject(telegram);
@@ -101,18 +102,10 @@ module.exports = function (RED) {
                     service.actionParam = telegram.value;
                     switch (telegram.write) {
                         case "coil":
-                            service.actionFunction = Array.isArray(
-                                telegram.value
-                            )
-                                ? service.writeCoils
-                                : service.writeCoil;
+                            service.actionFunction = Array.isArray(telegram.value) ? service.writeCoils : service.writeCoil;
                             break;
                         case "holding":
-                            service.actionFunction = Array.isArray(
-                                telegram.value
-                            )
-                                ? service.writeRegisters
-                                : service.writeRegister;
+                            service.actionFunction = Array.isArray(telegram.value) ? service.writeRegisters : service.writeRegister;
                             break;
                         default:
                             telegram.error = modbusErrorCode[10];
