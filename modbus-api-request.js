@@ -51,7 +51,7 @@ module.exports = function (RED) {
             this.status({
                 fill: color,
                 shape: "dot",
-                text: `q:${this.queue}`,
+                text: `in queue: ${this.queue}`,
                 message: message
             });
         }
