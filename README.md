@@ -14,7 +14,7 @@ $ npm i @mrcamilletti/node-red-contrib-serial-modbus-api
 
 ## Modbus Server configuration node
 <b>Port</b>: Serial device location. i.e.: /dev/ttyUSB0 <br>
-<b>Baudrate</b>: Serial baudrate.<br>
+<b>Settings: </b>: Baud rate, data bits, parity check and stop bits. <br>
 <b>Timeout</b>: Response timeout from device request. Value in milliseconds.<br>
 <b>Interval</b>: Sleep time between transactions. Value in milliseconds.<br>
 <b>Queue capacity</b>: Máximum number of transactions in the queue.<br>
@@ -141,4 +141,13 @@ msg.payload = {
 }
 ```
 
+## Add number of retries
+In case of timeout error, the message can be pushed back to the queue a number of times specified by payload.retries
+
+```
+msg.payload = {
+    ...
+    retries: 5
+}
+```
 
