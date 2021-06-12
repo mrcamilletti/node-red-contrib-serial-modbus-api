@@ -6,6 +6,9 @@
             name:       {value:'',              required:false},
             port:       {value:'',              required:true},            
             baudRate:   {value:19200,           required:true, validate:RED.validators.number()},            
+            dataBits:   {value:8,               required:false},
+            parity:     {value:"none",          required:false},
+            stopBits:   {value:1,               required:false},
             timeout:    {value:100,             required:false, validate:RED.validators.number()},
             interval:   {value:5,               required:false, validate:RED.validators.number()},
             capacity:   {value:256,             required:false, validate:RED.validators.number()}
@@ -89,10 +92,47 @@
         <input type="text" id="node-config-input-port" style="width:60%;">
         <a id="node-config-lookup-serial" class="red-ui-button"><i id="node-config-lookup-serial-icon" class="fa fa-search"></i></a>
     </div>    
+    <!--
     <div class="form-row">
         <label for="node-config-input-baudRate"><i class="fa fa-wrench"></i> Baudrate</label>
         <input type="number" id="node-config-input-baudRate">
     </div>
+    -->
+
+    <div class="form-row" style="margin-bottom:8px;">
+        <table width="100%">
+        <tr style="line-height:10px;">
+            <td width="90px" style="font-size:14px;"><i class="fa fa-wrench"></i> Settings</td>
+            <td width="110px">Baud rate</td>
+            <td width="70px">Data bits</td>
+            <td width="80px">Parity</td>
+            <td width="70px">Stop bits</td>
+        </tr>
+        <tr>
+        <td>&nbsp;</td>
+        <td>
+            <input type="text" id="node-config-input-baudRate" style="width:92% height:28px;">
+        </td>
+        <td><select type="text" id="node-config-input-dataBits" style="width:90%; height:28px;">
+            <option value="8">8</option>
+            <option value="7">7</option>
+            <option value="6">6</option>
+            <option value="5">5</option>
+        </select></td>
+        <td><select type="text" id="node-config-input-parity" style="width:90%; height:28px;">
+            <option value="none">None</option>
+            <option value="even">Even</option>
+            <option value="mark">Mark</option>
+            <option value="odd">Odd</option>
+            <option value="space">Space</option>
+        </select></td>
+        <td><select type="text" id="node-config-input-stopBits" style="width:60px; height:28px;">
+            <option value="2">2</option>
+            <option value="1">1</option>
+        </select></td>
+        </tr></table>
+    </div>
+
     <br>
     <div class="form-row"> 
         <label style="width:100%;"><b>Queue manager</b></label>
