@@ -51,25 +51,28 @@ module.exports = function (RED) {
             this.status({
                 fill: color,
                 shape: "dot",
-                text: `in queue: ${this.queue}`,
+                text: (this.queue > 0) ? `in queue: ${this.queue}` : "done",
                 message: message
             });
         }
 
         node.buildMessage = (msg, value) => {
             var resultError = "error" in value;
-
+                        
             if ("retries" in value) {
                 value.retries--;
-                if (resultError && value.retries > 0) {
-                    delete value.error;
-                    node.setStatus("Retry","yellow");
-                    node.server.pushTelegram(
-                        value,
-                        (r) => {node.buildMessage(msg, r)},
-                        (e) => {node.buildMessage(msg, e)}
-                    );
-                    return;
+                if (resultError) {
+                    // Retry only on ETIMEDOUT 
+                    if ((value.error.errno == "ETIMEDOUT") && (value.retries > 0)) {
+                        delete value.error;
+                        node.setStatus("Retry","yellow");
+                        node.server.pushTelegram(
+                            value,
+                            (r) => {node.buildMessage(msg, r)},
+                            (e) => {node.buildMessage(msg, e)}
+                        );
+                        return;
+                    }
                 }
             }
 
