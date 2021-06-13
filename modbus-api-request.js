@@ -58,7 +58,7 @@ module.exports = function (RED) {
 
         node.buildMessage = (msg, value) => {
             var resultError = "error" in value;
-                        
+                       
             if ("retries" in value) {
                 value.retries--;
                 if (resultError) {
@@ -75,16 +75,31 @@ module.exports = function (RED) {
                     }
                 }
             }
-
-            msg.payload = value;
-            node.setTopic(msg);
-
-            node.send(resultError ? [null, msg] : [msg, null]);
             
+            // Create new msg reference
+            var newMsg = {... msg};
+            delete newMsg._msgid;
+
+            // Format msg and send
+            newMsg.payload = value;
+            node.setTopic(newMsg);
+            node.send(resultError ? [null, newMsg] : [newMsg, null]);
+            
+            // Update queue
             node.queue--;
+
+            // Update status
             resultError ? node.setStatus("Error","red") : node.setStatus("Ok","green");
         }
 
+
+
+
+
+
+
+
+        // Node events
         try {
             if (node.server) {
                 node.server.on('port-ready', function() {
@@ -130,5 +145,7 @@ module.exports = function (RED) {
             node.error(`Error: ${error}`);
         }
     }
+
+    // Register Node type
     RED.nodes.registerType("modbus api request", modbusRequestNode);
 };
