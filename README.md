@@ -11,6 +11,7 @@ $ npm i @mrcamilletti/node-red-contrib-serial-modbus-api
 ## Modbus request node
 <b>Modbus Server</b>: Select configuration node (required) <br>
 <b>msg.topic</b>: Select option to change message topic. Default: Keep </br>
+<b>Retries</b>: Number of retries in case of timeout.
 
 ## Modbus Server configuration node
 <b>Port</b>: Serial device location. i.e.: /dev/ttyUSB0 <br>
