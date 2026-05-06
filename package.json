@@ -25,7 +25,7 @@
     }
   },
   "devDependencies": {
-    "bcrypt": "^5.0.1"
+    "bcrypt": "^6.0.0"
   },
   "dependencies": {
     "modbus-serial": "^7.7.3"
